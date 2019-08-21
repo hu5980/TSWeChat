@@ -24,29 +24,37 @@ extension TSChatViewController {
         /**
          Keyboard notifications
          */
-        let notificationCenter = NotificationCenter.default
-        notificationCenter.ts_addObserver(self, name: NSNotification.Name.UIKeyboardWillShow.rawValue, object: nil, handler: {
-            [weak self] observer, notification in
-            guard let strongSelf = self else { return }
-            strongSelf.listTableView.scrollToBottomAnimated(false)
-            strongSelf.keyboardControl(notification, isShowing: true)
+        NotificationCenter.default
+            .rx.notification(Notification.Name(rawValue: UIResponder.keyboardWillShowNotification.rawValue), object: nil)
+            .subscribe(onNext: {[weak self] notification in
+                guard let strongSelf = self else { return }
+                strongSelf.listTableView.scrollToBottomAnimated(false)
+                strongSelf.keyboardControl(notification, isShowing: true)
             })
+            .disposed(by: disposeBag)
         
-        notificationCenter.ts_addObserver(self, name: NSNotification.Name.UIKeyboardDidShow.rawValue, object: nil, handler: {observer, notification in
-            if let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue {
-                _ = UIEdgeInsets(top: 0, left: 0, bottom: keyboardSize.height, right: 0)
-            }
-        })
-        
-        notificationCenter.ts_addObserver(self, name: NSNotification.Name.UIKeyboardWillHide.rawValue, object: nil, handler: {
-            [weak self] observer, notification in
-            guard let strongSelf = self else { return }
-            strongSelf.keyboardControl(notification, isShowing: false)
+        NotificationCenter.default
+            .rx.notification(Notification.Name(rawValue: UIResponder.keyboardDidShowNotification.rawValue), object: nil)
+            .subscribe(onNext: {notification in
+                if let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue {
+                    _ = UIEdgeInsets(top: 0, left: 0, bottom: keyboardSize.height, right: 0)
+                }
             })
+            .disposed(by: disposeBag)
         
-        notificationCenter.ts_addObserver(self, name: NSNotification.Name.UIKeyboardDidHide.rawValue, object: nil, handler: {
-            observer, notification in
+        NotificationCenter.default
+            .rx.notification(Notification.Name(rawValue: UIResponder.keyboardWillHideNotification.rawValue), object: nil)
+            .subscribe(onNext: {[weak self] notification in
+                guard let strongSelf = self else { return }
+                strongSelf.keyboardControl(notification, isShowing: false)
             })
+            .disposed(by: disposeBag)
+        
+        NotificationCenter.default
+            .rx.notification(Notification.Name(rawValue: UIResponder.keyboardDidHideNotification.rawValue), object: nil)
+            .subscribe(onNext: {notification in
+            })
+            .disposed(by: disposeBag)
         
 //        notificationCenter.addObserverForName(
 //            UIKeyboardWillChangeFrameNotification,
@@ -105,13 +113,13 @@ extension TSChatViewController {
         处理 Default, Text 的键盘属性
         */
         var userInfo = notification.userInfo!
-        let keyboardRect = (userInfo[UIKeyboardFrameEndUserInfoKey]! as AnyObject).cgRectValue
-        let curve = (userInfo[UIKeyboardAnimationCurveUserInfoKey]! as AnyObject).uint32Value
+        let keyboardRect = (userInfo[UIResponder.keyboardFrameEndUserInfoKey]! as AnyObject).cgRectValue
+        let curve = (userInfo[UIResponder.keyboardAnimationCurveUserInfoKey]! as AnyObject).uint32Value
         
         let convertedFrame = self.view.convert(keyboardRect!, from: nil)
         let heightOffset = self.view.bounds.size.height - convertedFrame.origin.y
-        let options = UIViewAnimationOptions(rawValue: UInt(curve!) << 16 | UIViewAnimationOptions.beginFromCurrentState.rawValue)
-        let duration = (userInfo[UIKeyboardAnimationDurationUserInfoKey]! as AnyObject).doubleValue
+        let options = UIView.AnimationOptions(rawValue: UInt(curve!) << 16 | UIView.AnimationOptions.beginFromCurrentState.rawValue)
+        let duration = (userInfo[UIResponder.keyboardAnimationDurationUserInfoKey]! as AnyObject).doubleValue
 
         self.listTableView.stopScrolling()
         self.actionBarPaddingBottomConstranit?.update(offset:-heightOffset)
@@ -133,9 +141,9 @@ extension TSChatViewController {
     
     //获取键盘的高度
     func appropriateKeyboardHeight(_ notification: Notification) -> CGFloat {
-        let endFrame = (notification.userInfo![UIKeyboardFrameEndUserInfoKey] as! NSValue).cgRectValue
+        let endFrame = (notification.userInfo![UIResponder.keyboardFrameEndUserInfoKey] as! NSValue).cgRectValue
         var keyboardHeight: CGFloat = 0.0
-        if notification.name == NSNotification.Name.UIKeyboardWillShow {
+        if notification.name == UIResponder.keyboardWillShowNotification {
             keyboardHeight = min(endFrame.width, endFrame.height)
         }
         
@@ -167,7 +175,7 @@ extension TSChatViewController {
         UIView.animate(
             withDuration: 0.25,
             delay: 0,
-            options: UIViewAnimationOptions(),
+            options: UIView.AnimationOptions(),
             animations: {
                 self.view.layoutIfNeeded()
             },
@@ -207,7 +215,7 @@ extension TSChatViewController: TSChatActionBarViewDelegate {
         UIView.animate(
             withDuration: 0.25,
             delay: 0,
-            options: UIViewAnimationOptions(),
+            options: UIView.AnimationOptions(),
             animations: {
                 //表情键盘归位
                 self.emotionInputView.snp.updateConstraints { make in
@@ -233,11 +241,11 @@ extension TSChatViewController: TSChatActionBarViewDelegate {
         self.actionBarPaddingBottomConstranit?.update(offset: -heightOffset)
         
         self.shareMoreView.ts_top = self.view.ts_height
-        self.view.bringSubview(toFront: self.shareMoreView)
+        self.view.bringSubviewToFront(self.shareMoreView)
         UIView.animate(
             withDuration: 0.25,
             delay: 0,
-            options: UIViewAnimationOptions(),
+            options: UIView.AnimationOptions(),
             animations: {
                 //分享键盘归位，盖在表情键盘上，所以不需要控制表情键盘
                 self.shareMoreView.snp.updateConstraints { make in

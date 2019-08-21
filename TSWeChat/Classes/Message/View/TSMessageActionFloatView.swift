@@ -9,6 +9,7 @@
 import UIKit
 import SnapKit
 import RxSwift
+import Dollar
 
 private let kActionViewWidth: CGFloat = 140   //container view width
 private let kActionViewHeight: CGFloat = 190    //container view height
@@ -61,7 +62,7 @@ class TSMessageActionFloatView: UIView {
         }
         
         //Init bgImageView
-        let stretchInsets = UIEdgeInsetsMake(14, 6, 6, 34)
+        let stretchInsets = UIEdgeInsets.init(top: 14, left: 6, bottom: 6, right: 34)
         let bubbleMaskImage = TSAsset.MessageRightTopBg.image.resizableImage(withCapInsets: stretchInsets, resizingMode: .stretch)
         let bgImageView: UIImageView = UIImageView(image: bubbleMaskImage)
         containerView.addSubview(bgImageView)
@@ -75,16 +76,18 @@ class TSMessageActionFloatView: UIView {
             let itemButton: UIButton = UIButton(type: .custom)
             itemButton.backgroundColor = UIColor.clear
             itemButton.titleLabel!.font = UIFont.systemFont(ofSize: 17)
-            itemButton.setTitleColor(UIColor.white, for: UIControlState())
+            itemButton.setTitleColor(UIColor.white, for: UIControl.State())
             itemButton.setTitleColor(UIColor.white, for: .highlighted)
-            itemButton.setTitle(actionTitles.get(index: index), for: .normal)
-            itemButton.setTitle(actionTitles.get(index: index), for: .highlighted)
-            itemButton.setImage(actionImages.get(index: index), for: .normal)
-            itemButton.setImage(actionImages.get(index: index), for: .highlighted)
-            itemButton.addTarget(self, action: #selector(TSMessageActionFloatView.buttonTaped(_:)), for: UIControlEvents.touchUpInside)
+            let title = Dollar.fetch(actionTitles, index, orElse: "")
+            itemButton.setTitle(title, for: .normal)
+            itemButton.setTitle(title, for: .highlighted)
+            let image = Dollar.fetch(actionImages, index, orElse: nil)
+            itemButton.setImage(image, for: .normal)
+            itemButton.setImage(image, for: .highlighted)
+            itemButton.addTarget(self, action: #selector(TSMessageActionFloatView.buttonTaped(_:)), for: UIControl.Event.touchUpInside)
             itemButton.contentHorizontalAlignment = .left
-            itemButton.contentEdgeInsets = UIEdgeInsetsMake(0, 12, 0, 0)
-            itemButton.titleEdgeInsets = UIEdgeInsetsMake(0, 10, 0, 0)
+            itemButton.contentEdgeInsets = UIEdgeInsets.init(top: 0, left: 12, bottom: 0, right: 0)
+            itemButton.titleEdgeInsets = UIEdgeInsets.init(top: 0, left: 10, bottom: 0, right: 0)
             itemButton.tag = index
             containerView.addSubview(itemButton)
             
@@ -102,12 +105,12 @@ class TSMessageActionFloatView: UIView {
         self.addGestureRecognizer(tap)
         tap.rx.event.subscribe { _ in
             self.hide(true)
-        }.addDisposableTo(self.disposeBag)
+        }.disposed(by:self.disposeBag)
         
         self.isHidden = true
     }
     
-    func buttonTaped(_ sender: UIButton!) {
+    @objc func buttonTaped(_ sender: UIButton!) {
         guard let delegate = self.delegate else {
             self.hide(true)
             return

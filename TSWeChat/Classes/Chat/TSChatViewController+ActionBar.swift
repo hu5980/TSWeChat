@@ -36,7 +36,7 @@ extension TSChatViewController {
                 voiceButton.emotionSwiftVoiceButtonUI(showKeyboard: false)
                 strongSelf.controlExpandableInputView(showExpandable: true)
             }
-        }.addDisposableTo(self.disposeBag)
+        }.disposed(by: self.disposeBag)
         
         
         //录音按钮
@@ -68,7 +68,7 @@ extension TSChatViewController {
                 strongSelf.voiceIndicatorView.endRecord()
                 recordButton.replaceRecordButtonUI(isRecording: false)
             }
-        }.addDisposableTo(self.disposeBag)
+        }.disposed(by: self.disposeBag)
         
         
         //表情按钮
@@ -85,7 +85,7 @@ extension TSChatViewController {
             }
             
             strongSelf.controlExpandableInputView(showExpandable: true)
-        }.addDisposableTo(self.disposeBag)
+        }.disposed(by: self.disposeBag)
         
         
         //分享按钮
@@ -100,7 +100,7 @@ extension TSChatViewController {
             }
             
             strongSelf.controlExpandableInputView(showExpandable: true)
-        }.addDisposableTo(self.disposeBag)
+        }.disposed(by: self.disposeBag)
 
         
         //文字框的点击，唤醒键盘
@@ -111,7 +111,7 @@ extension TSChatViewController {
             textView.inputView = nil
             textView.becomeFirstResponder()
             textView.reloadInputViews()
-        }.addDisposableTo(self.disposeBag)
+        }.disposed(by: self.disposeBag)
     }
     
     /**

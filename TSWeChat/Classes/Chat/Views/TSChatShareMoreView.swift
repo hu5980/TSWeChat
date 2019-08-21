@@ -11,6 +11,7 @@ import SnapKit
 import RxSwift
 import RxBlocking
 import Dollar
+//import Cent
 
 private let kLeftRightPadding: CGFloat = 15.0
 private let kTopBottomPadding: CGFloat = 10.0
@@ -63,11 +64,11 @@ class TSChatShareMoreView: UIView {
         let layout = TSFullyHorizontalFlowLayout()
         layout.minimumLineSpacing = 8
         layout.minimumInteritemSpacing = 0
-        layout.sectionInset = UIEdgeInsetsMake(
-            kTopBottomPadding,
-            kLeftRightPadding,
-            kTopBottomPadding,
-            kLeftRightPadding
+        layout.sectionInset = UIEdgeInsets.init(
+            top: kTopBottomPadding,
+            left: kLeftRightPadding,
+            bottom: kTopBottomPadding,
+            right: kLeftRightPadding
         )
         //Calculate the UICollectionViewCell size
         let itemSizeWidth = (UIScreen.ts_width - kLeftRightPadding*2 - layout.minimumLineSpacing*(kItemCountOfRow - 1)) / kItemCountOfRow
@@ -84,7 +85,7 @@ class TSChatShareMoreView: UIView {
         So I cut the itemDataSouce into 2 arrays. And the UICollectionView will has 2 sections.
         And then set the minimumLineSpacing and sectionInset of the flowLayout. The UI will be perfect like WeChat.
         */
-        self.groupDataSouce = $.chunk(self.itemDataSouce, size: Int(kItemCountOfRow)*2)
+        self.groupDataSouce = Dollar.chunk(self.itemDataSouce, size: Int(kItemCountOfRow)*2)
         self.pageControl.numberOfPages = self.groupDataSouce.count
     }
     
@@ -123,7 +124,7 @@ extension TSChatShareMoreView: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        guard let subArray = self.groupDataSouce.get(index: section) else {
+        guard let subArray = Dollar.fetch(self.groupDataSouce, section) else {
             return 0
         }
         return subArray.count
@@ -131,10 +132,10 @@ extension TSChatShareMoreView: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: TSChatShareMoreCollectionViewCell.identifier, for: indexPath) as! TSChatShareMoreCollectionViewCell
-        guard let subArray = self.groupDataSouce.get(index: indexPath.section) else {
+        guard let subArray = Dollar.fetch(self.groupDataSouce, indexPath.section) else {
             return TSChatShareMoreCollectionViewCell()
         }
-        if let item = subArray.get(index: indexPath.row) {
+        if let item = Dollar.fetch(subArray, indexPath.row) {
             cell.itemButton.setImage(item.iconImage, for: .normal)
             cell.itemLabel.text = item.name
         }

@@ -14,7 +14,7 @@ public let kChatTextKeyURL = "URL"
 
 class TSChatTextParser: NSObject {
     class func parseText(_ text: String, font: UIFont) -> NSMutableAttributedString? {
-        if text.characters.count == 0 {
+        if text.count == 0 {
             return nil
         }
         
@@ -134,7 +134,7 @@ class TSChatTextParseHelper {
     class var highlightBorder: YYTextBorder {
         get {
             let highlightBorder = YYTextBorder()
-            highlightBorder.insets = UIEdgeInsetsMake(-2, 0, -2, 0)
+            highlightBorder.insets = UIEdgeInsets.init(top: -2, left: 0, bottom: -2, right: 0)
             highlightBorder.fillColor = UIColor.init(ts_hexString: "#D4D1D1")
             return highlightBorder
         }
@@ -180,10 +180,13 @@ class TSChatTextParseHelper {
 private extension String {
     func nsRange(from range: Range<String.Index>) -> NSRange {
         let utf16view = self.utf16
-        let from = range.lowerBound.samePosition(in: utf16view)
-        let to = range.upperBound.samePosition(in: utf16view)
-        return NSMakeRange(utf16view.distance(from: utf16view.startIndex, to: from),
-                           utf16view.distance(from: from, to: to))
+        if let from = range.lowerBound.samePosition(in: utf16view), let to = range.upperBound.samePosition(in: utf16view) {
+            return NSMakeRange(utf16view.distance(from: utf16view.startIndex, to: from),
+                               utf16view.distance(from: from, to: to))
+        } else {
+            return NSMakeRange(0, 0)
+        }
+    
     }
     
     func range(from nsRange: NSRange) -> Range<String.Index>? {

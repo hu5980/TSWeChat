@@ -9,9 +9,10 @@
 import UIKit
 import SnapKit
 import RxSwift
-import BSImagePicker
+//import BSImagePicker
 import Photos
 import SwiftyJSON
+import Dollar
 
 /*
 *   聊天详情的 ViewController
@@ -61,7 +62,10 @@ final class TSChatViewController: UIViewController {
         self.listTableView.ts_registerCellNib(TSChatTimeCell.self)
         self.listTableView.tableFooterView = UIView()
         self.listTableView.tableHeaderView = self.refreshView
-        
+        self.listTableView.estimatedRowHeight = 0;
+        self.listTableView.estimatedSectionHeaderHeight = 0;
+        self.listTableView.estimatedSectionFooterHeight = 0;
+
         //初始化子 View，键盘控制，动作 bar
         self.setupSubviews(self)
         self.keyboardControl()
@@ -116,13 +120,13 @@ extension TSChatViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        guard let chatModel = self.itemDataSouce.get(index: indexPath.row) else {return 0}
+        guard let chatModel = Dollar.fetch(self.itemDataSouce, indexPath.row) else {return 0}
         let type: MessageContentType = chatModel.messageContentType
         return type.chatCellHeight(chatModel)
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let chatModel = self.itemDataSouce.get(index: indexPath.row) else {return TSChatBaseCell()}
+        guard let chatModel = Dollar.fetch(self.itemDataSouce, indexPath.row) else {return TSChatBaseCell()}
         let type: MessageContentType = chatModel.messageContentType
         return type.chatCell(tableView, indexPath: indexPath, model: chatModel, viewController: self)!
     }

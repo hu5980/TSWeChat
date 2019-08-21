@@ -8,6 +8,7 @@
 
 import Foundation
 import INTULocationManager
+import Dollar
 
 let LocationInstance = LocationManager.sharedInstance
 
@@ -36,7 +37,7 @@ class LocationManager: NSObject {
         super.init()
     }
     
-    func startLocation(_ success:@escaping (Void) ->Void, failure:@escaping (Void) ->Void) {
+    func startLocation(_ success:@escaping () ->Void, failure:@escaping () ->Void) {
         let manager = INTULocationManager.sharedInstance()
         manager.requestLocation(
             withDesiredAccuracy: .city,
@@ -53,7 +54,7 @@ class LocationManager: NSObject {
                     success()
                     break
                 case .timedOut:
-                    TSAlertView_show("Location request timed out. Current Location:\(currentLocation)")
+                    TSAlertView_show("Location request timed out. Current Location:\(String(describing: currentLocation))")
                     failure()
                     break
                 default:
@@ -112,8 +113,8 @@ class LocationManager: NSObject {
                     return
                 }
                 if let placemarks = placemarks, placemarks.count > 0{
-                    let onePlacemark = placemarks.get(index: 0)
-                    self.address = "\(onePlacemark?.administrativeArea,onePlacemark?.subLocality,onePlacemark?.thoroughfare)"
+                    let onePlacemark = Dollar.fetch(placemarks, 0)
+                    self.address = "\(onePlacemark?.administrativeArea), \(onePlacemark?.subLocality), \(onePlacemark?.thoroughfare)"
                     self.city = (onePlacemark?.administrativeArea!)!
                     self.street = (onePlacemark?.thoroughfare!)!
                 }
@@ -125,7 +126,7 @@ class LocationManager: NSObject {
 // MARK: - @delegate CLLocationManagerDelegate
 extension LocationManager: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        let userLocation: CLLocation = locations.get(index: locations.count - 1)
+        let userLocation: CLLocation = Dollar.fetch(locations, locations.count-1)
         self.updateLocation(userLocation)
     }
     

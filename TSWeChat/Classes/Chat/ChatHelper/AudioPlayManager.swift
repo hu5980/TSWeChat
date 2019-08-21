@@ -10,11 +10,14 @@ import Foundation
 import AVFoundation
 import Alamofire
 import TSVoiceConverter
+import RxSwift
+import RxBlocking
 
 let AudioPlayInstance = AudioPlayManager.sharedInstance
 
 class AudioPlayManager: NSObject {
     fileprivate var audioPlayer: AVAudioPlayer?
+    internal let disposeBag = DisposeBag()
     weak var delegate: PlayAudioDelegate?
     
     class var sharedInstance : AudioPlayManager {
@@ -27,27 +30,24 @@ class AudioPlayManager: NSObject {
     fileprivate override init() {
         super.init()
         //监听听筒和扬声器
-        let notificationCenter = NotificationCenter.default
-        notificationCenter.ts_addObserver(self, name: NSNotification.Name.UIDeviceProximityStateDidChange.rawValue, object: UIDevice.current, handler: {
-            observer, notification in
+        let center = NotificationCenter.default.rx.notification(Notification.Name(rawValue: UIDevice.proximityStateDidChangeNotification.rawValue), object: UIDevice.current)
+        center.subscribe { notification in
             if UIDevice.current.proximityState {
                 do {
-                    try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayAndRecord)
+                    try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category(rawValue: convertFromAVAudioSessionCategory(AVAudioSession.Category.playAndRecord)))
                 } catch _ {}
             } else {
                 do {
-                    try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayback)
+                    try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category(rawValue: convertFromAVAudioSessionCategory(AVAudioSession.Category.playback)))
                 } catch _ {}
             }
-        })
+        }.dispose()
     }
     
     func startPlaying(_ audioModel: ChatAudioModel) {
-        if AVAudioSession.sharedInstance().category == AVAudioSessionCategoryRecord {
-            do {
-                try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryPlayback)
-            } catch _ {}
-        }
+        do {
+            try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category(rawValue: convertFromAVAudioSessionCategory(AVAudioSession.Category.playback)))
+        } catch _ {}
         
         guard let keyHash = audioModel.keyHash else {
             self.delegate?.audioPlayFailed()
@@ -108,6 +108,7 @@ class AudioPlayManager: NSObject {
         }
         self.audioPlayer!.delegate = nil
         self.audioPlayer!.stop()
+        self.audioPlayer?.prepareToPlay() //重置AVAudioSession
         self.audioPlayer = nil
         UIDevice.current.isProximityMonitoringEnabled = false
     }
@@ -118,7 +119,7 @@ class AudioPlayManager: NSObject {
             self.stopPlayer()
         }
         
-        guard let fileName = audioModel.keyHash, fileName.length > 0 else { return}
+        guard let fileName = audioModel.keyHash, fileName.count > 0 else { return}
 
         let amrPathString = AudioFilesManager.amrPathWithName(fileName).path
         let wavPathString = AudioFilesManager.wavPathWithName(fileName).path        
@@ -200,11 +201,7 @@ extension AudioPlayManager: AVAudioPlayerDelegate {
 
 
 
-
-
-
-
-
-
-
-
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertFromAVAudioSessionCategory(_ input: AVAudioSession.Category) -> String {
+	return input.rawValue
+}

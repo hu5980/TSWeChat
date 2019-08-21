@@ -8,6 +8,7 @@
 
 import UIKit
 import TimedSilver
+import Dollar
 
 class TSTabbarViewController: UITabBarController {
     
@@ -42,11 +43,11 @@ class TSTabbarViewController: UITabBarController {
         
         let navigationVCArray = NSMutableArray()
         for (index, controller) in viewControllerArray.enumerated() {
-            controller.tabBarItem!.title = titleArray.get(index: index)
-            controller.tabBarItem!.image = normalImagesArray.get(index: index).withRenderingMode(.alwaysOriginal)
-            controller.tabBarItem!.selectedImage = selectedImagesArray.get(index: index).withRenderingMode(.alwaysOriginal)
-            controller.tabBarItem!.setTitleTextAttributes([NSForegroundColorAttributeName: UIColor.lightGray], for: UIControlState())
-            controller.tabBarItem!.setTitleTextAttributes([NSForegroundColorAttributeName: UIColor.tabbarSelectedTextColor], for: .selected)
+            controller.tabBarItem!.title = Dollar.fetch(titleArray, index)
+            controller.tabBarItem!.image = Dollar.fetch(normalImagesArray, index).withRenderingMode(.alwaysOriginal)
+            controller.tabBarItem!.selectedImage = Dollar.fetch(selectedImagesArray, index).withRenderingMode(.alwaysOriginal)
+            controller.tabBarItem!.setTitleTextAttributes([NSAttributedString.Key.foregroundColor: UIColor.lightGray], for: UIControl.State())
+            controller.tabBarItem!.setTitleTextAttributes([NSAttributedString.Key.foregroundColor: UIColor.tabbarSelectedTextColor], for: .selected)
             let navigationController = UINavigationController(rootViewController: controller)
             navigationVCArray.add(navigationController)
         }

@@ -26,7 +26,7 @@ class TSChatEmotionInputView: UIView {
     @IBOutlet fileprivate weak var listCollectionView: TSChatEmotionScollView!
     fileprivate var groupDataSouce = [[EmotionModel]]()  //大数组包含小数组
     fileprivate var emotionsDataSouce = [EmotionModel]()  //Model 数组
-    internal var delegate: ChatEmotionInputViewDelegate?
+    weak internal var delegate: ChatEmotionInputViewDelegate?
 
     required init(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)!
@@ -52,7 +52,7 @@ class TSChatEmotionInputView: UIView {
         layout.itemSize = CGSize(width: itemWidth, height: itemHeight)
         layout.minimumLineSpacing = 0
         layout.minimumInteritemSpacing = 0
-        layout.sectionInset = UIEdgeInsetsMake(0, paddingLeft, 0, paddingRight)
+        layout.sectionInset = UIEdgeInsets.init(top: 0, left: paddingLeft, bottom: 0, right: paddingRight)
         
         //init listCollectionView
         self.listCollectionView.collectionViewLayout = layout
@@ -69,7 +69,7 @@ class TSChatEmotionInputView: UIView {
             let model = EmotionModel.init(fromDictionary: data as! NSDictionary)
             self.emotionsDataSouce.append(model)
         }
-        self.groupDataSouce = $.chunk(self.emotionsDataSouce, size: kOneGroupCount)  //将数组切割成 每23个 一组
+        self.groupDataSouce = Dollar.chunk(self.emotionsDataSouce, size: kOneGroupCount)  //将数组切割成 每23个 一组
         self.listCollectionView.reloadData()
         self.emotionPageControl.numberOfPages = self.groupDataSouce.count
     }
@@ -170,7 +170,7 @@ extension TSChatEmotionInputView: ChatEmotionScollViewDelegate {
  *  表情键盘的代理方法
  */
  // MARK: - @delegate ChatEmotionInputViewDelegate
-protocol ChatEmotionInputViewDelegate {
+protocol ChatEmotionInputViewDelegate: class {
     /**
      点击表情 Cell
      
